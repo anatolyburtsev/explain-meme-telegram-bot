@@ -60,7 +60,10 @@ async function analyzeImageWithGPT4V(imageBuffer: Buffer, messageText?: string):
     const base64Image = imageBuffer.toString('base64');
     
     // Prepare the prompt
-    let prompt = "Please analyze this meme and explain its meaning and humor. ";
+    let prompt = `Analyze this meme briefly (2-3 sentences max). ${messageText ? `Consider this text: "${messageText}". ` : ''}
+Then provide a Russian translation of your analysis. Format:
+EN: [your brief analysis]
+RU: [russian translation]`;
     if (messageText) {
       prompt += `Consider this accompanying text as well: "${messageText}"`;
     }
@@ -111,10 +114,6 @@ bot.on('message', async (ctx: Context) => {
       
       // Send the analysis
       await ctx.reply(analysis);
-      
-      // Also send the original image details
-      const details = `Image details:\nSize: ${image.width}x${image.height} pixels\nFile size: ${image.file_size || 'unknown'} bytes`;
-      await ctx.reply(details);
       return;
     }
     
