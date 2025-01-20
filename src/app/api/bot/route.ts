@@ -22,15 +22,41 @@ bot.use(async (ctx: Context, next) => {
   return next();
 });
 
-// Echo bot logic using modern filter approach
+// Helper function to get image details from message
+const getImageFromMessage = (ctx: Context) => {
+  const msg = ctx.message;
+  if (!msg) return null;
+
+  // Check for photo in the message
+  if ('photo' in msg && msg.photo && msg.photo.length > 0) {
+    // Return the highest resolution photo (last in array)
+    return msg.photo[msg.photo.length - 1];
+  }
+
+  return null;
+};
+
+// Handle messages with images
 bot.on('message', async (ctx: Context) => {
   try {
+    // Handle text messages
     if (ctx.message && 'text' in ctx.message) {
       await ctx.reply(ctx.message.text);
+      return;
     }
+
+    // Handle messages with images
+    const image = getImageFromMessage(ctx);
+    if (image) {
+      const response = `Image details:\nFile ID: ${image.file_id}\nSize: ${image.width}x${image.height} pixels\nFile size: ${image.file_size || 'unknown'} bytes`;
+      await ctx.reply(response);
+      return;
+    }
+
+    // No text or image found
+    await ctx.reply('Please send a text message or an image.');
   } catch (error) {
     console.error('Error in message handler:', error);
-    // Attempt to notify about the error if possible
     try {
       await ctx.reply('Sorry, I encountered an error processing your message.');
     } catch {
@@ -43,7 +69,6 @@ bot.on('message', async (ctx: Context) => {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // Telegraf handles the incoming update from Telegram
     await bot.handleUpdate(body);
     return NextResponse.json({ message: 'OK' }, { status: 200 });
   } catch (error) {
