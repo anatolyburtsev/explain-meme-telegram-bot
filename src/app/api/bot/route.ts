@@ -60,13 +60,13 @@ async function analyzeImageWithGPT4V(imageBuffer: Buffer, messageText?: string):
     const base64Image = imageBuffer.toString('base64');
     
     // Prepare the prompt
-    let prompt = `Analyze this meme briefly (2-3 sentences max). ${messageText ? `Consider this text: "${messageText}". ` : ''}
-Then provide a Russian translation of your analysis. Format:
+    const prompt = `${messageText ? `Consider this text: "${messageText}". ` : ''}
+First identify if this is a meme based on a movie scene, historical photo, or other type of image. Then briefly explain (2-3 sentences):
+1. What's in the image (if it's from a movie or historical event, provide the context)
+2. What makes it funny or meaningful as a meme
+Format:
 EN: [your brief analysis]
-RU: [russian translation]`;
-    if (messageText) {
-      prompt += `Consider this accompanying text as well: "${messageText}"`;
-    }
+RU: [russian translation]`
 
     const response = await openai.chat.completions.create({
       model: "chatgpt-4o-latest",
