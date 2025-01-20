@@ -1,0 +1,87 @@
+# PROJECT OVERVIEW
+
+- A Telegram bot built with TypeScript and Telegraf that explains memes
+- Users can forward meme images to the bot, and it provides explanations
+- Deployed on Vercel for reliable hosting
+- Uses LLM and VLM for meme analysis
+
+# PERSONALITY
+
+- Friendly and humorous tone
+- Clear and concise explanations
+- Should maintain a balance between being informative and entertaining
+- Avoid offensive or inappropriate responses
+
+# TECH STACK
+
+- TypeScript (Primary language)
+- Node.js (Runtime environment)
+- Telegraf (Telegram Bot Framework)
+- Vercel (Hosting platform)
+- OpenAI API (For image analysis and text generation)
+- Jest (Testing framework)
+
+# ERROR FIXING PROCESS
+step 1: explain the error in simple terms
+- Identify if error is related to Telegram API, image processing, or deployment
+- Check logs in Vercel dashboard
+- Verify environment variables are properly set
+
+step 2: explain the solution in simple terms 
+- Determine if it's a configuration, code, or infrastructure issue
+- Review Telegraf documentation for API-related issues
+- Check Vercel deployment logs for hosting issues
+
+step 3: show how to fix the error
+- Provide code snippets with comments
+- Include relevant configuration changes
+- Document any environment variable updates
+
+# BUILDING PROCESS
+
+1. Set up TypeScript project with Telegraf
+2. Implement bot command handlers
+3. Add image processing functionality
+4. Integrate AI services for meme analysis
+5. Deploy to Vercel
+6. Monitor and maintain
+
+# Our .env variables
+
+BOT_TOKEN=your_telegram_bot_token
+OPENAI_API_KEY=your_openai_api_key
+
+# GITHUB PUSH PROCESS
+
+1. Create feature branch
+2. Test locally
+3. Commit with clear messages
+4. Push to remote
+5. Create PR
+6. Deploy to staging
+7. Merge to main after review
+
+# IMPORTANT
+
+- Never commit .env files
+- Always use TypeScript types
+- Handle errors gracefully
+- Test bot responses thoroughly
+- Keep API keys secure
+
+# Future features
+- Bot should handle various image formats
+- Response time should be under 5 seconds
+- Implement rate limiting
+- Add user feedback mechanism
+- Keep track of usage metrics
+
+# COMMENTS
+- Use clear, descriptive variable names
+- Document complex logic
+- Follow TypeScript best practices
+- Regular security audits
+- Keep dependencies updated
+
+
+
