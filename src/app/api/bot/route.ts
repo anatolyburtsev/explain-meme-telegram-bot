@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
 import { Telegraf, Context } from 'telegraf';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY as string,
+});
 
 // Initialize the Telegraf bot
 const bot = new Telegraf(process.env.BOT_TOKEN as string);
@@ -26,33 +32,98 @@ bot.use(async (ctx: Context, next) => {
 const getImageFromMessage = (ctx: Context) => {
   const msg = ctx.message;
   if (!msg) return null;
-
+  
   // Check for photo in the message
   if ('photo' in msg && msg.photo && msg.photo.length > 0) {
     // Return the highest resolution photo (last in array)
     return msg.photo[msg.photo.length - 1];
   }
-
   return null;
 };
+
+// Helper function to download file from Telegram
+async function getFileBuffer(ctx: Context, fileId: string): Promise<Buffer> {
+  const file = await ctx.telegram.getFile(fileId);
+  const filePath = file.file_path;
+  if (!filePath) throw new Error('Could not get file path');
+  
+  const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${filePath}`;
+  const response = await fetch(fileUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+// Helper function to analyze image with GPT-4V
+async function analyzeImageWithGPT4V(imageBuffer: Buffer, messageText?: string): Promise<string> {
+  try {
+    // Convert buffer to base64
+    const base64Image = imageBuffer.toString('base64');
+    
+    // Prepare the prompt
+    let prompt = "Please analyze this meme and explain its meaning and humor. ";
+    if (messageText) {
+      prompt += `Consider this accompanying text as well: "${messageText}"`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "chatgpt-4o-latest",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 500,
+    });
+
+    return response.choices[0]?.message?.content || "Sorry, I couldn't analyze the image.";
+  } catch (error) {
+    console.error('Error analyzing image:', error);
+    throw new Error('Failed to analyze image with GPT-4V');
+  }
+}
 
 // Handle messages with images
 bot.on('message', async (ctx: Context) => {
   try {
-    // Handle text messages
-    if (ctx.message && 'text' in ctx.message) {
-      await ctx.reply(ctx.message.text);
-      return;
-    }
-
+    // Get message text if it exists
+    const messageText = ctx.message && 'text' in ctx.message ? ctx.message.text : undefined;
+    
     // Handle messages with images
     const image = getImageFromMessage(ctx);
     if (image) {
-      const response = `Image details:\nFile ID: ${image.file_id}\nSize: ${image.width}x${image.height} pixels\nFile size: ${image.file_size || 'unknown'} bytes`;
-      await ctx.reply(response);
+      // Send "analyzing" message
+      await ctx.reply('Analyzing your meme...');
+      
+      // Get image file
+      const imageBuffer = await getFileBuffer(ctx, image.file_id);
+      
+      // Get image analysis
+      const analysis = await analyzeImageWithGPT4V(imageBuffer, messageText);
+      
+      // Send the analysis
+      await ctx.reply(analysis);
+      
+      // Also send the original image details
+      const details = `Image details:\nSize: ${image.width}x${image.height} pixels\nFile size: ${image.file_size || 'unknown'} bytes`;
+      await ctx.reply(details);
       return;
     }
-
+    
+    // Handle text-only messages
+    if (messageText) {
+      await ctx.reply(messageText);
+      return;
+    }
+    
     // No text or image found
     await ctx.reply('Please send a text message or an image.');
   } catch (error) {
@@ -86,4 +157,4 @@ export async function GET() {
     { message: 'This is the bot webhook endpoint.' },
     { status: 200 }
   );
-} 
+}
