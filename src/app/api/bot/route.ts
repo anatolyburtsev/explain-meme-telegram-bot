@@ -6,7 +6,6 @@ import {
   getFileBuffer
 } from '../../../lib/telegramUtils';
 import { analyzeImageWithGPT4V } from '../../../services/llmService';
-import { bufferToBase64 } from '../../../utils/imageUtils';
 
 // Initialize the Telegraf bot
 const bot = new Telegraf(process.env.BOT_TOKEN as string);
@@ -24,7 +23,7 @@ bot.on('message', async (ctx: Context) => {
     const image = getImageFromMessage(ctx);
     if (image) {
       // Get image file
-      const imageBuffer = await getFileBuffer(ctx, image.file_id);
+      const imageBuffer = await getFileBuffer(ctx.telegram, image.file_id);
       
       // Get image analysis
       const analysis = await analyzeImageWithGPT4V(imageBuffer, messageText);
